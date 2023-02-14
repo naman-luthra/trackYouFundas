@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const loadHistory = createAsyncThunk(
     'data/loadHistory',
-    async (props, { dispatch }) => {
+    async (props) => {
         try {
             const response = await fetch('http://localhost:8080/api/get-history',{
                 method: "post",
@@ -22,7 +22,7 @@ export const loadHistory = createAsyncThunk(
 
 export const sendData = createAsyncThunk(
     'data/sendData',
-    async ({data}, { dispatch }) => {
+    async ({data}) => {
         try {
             const requestBody = {
                 date: new Date().toISOString(),

@@ -25,7 +25,7 @@ export const dataSlice = createSlice({
                 state.status = 'loading';
             })
             .addCase(sendData.fulfilled, (state, action) => {
-                if(state.dataArray.findIndex(day=>day._id===action.payload._id)===1){
+                if(state.dataArray.findIndex(day=>day._id===action.payload._id)===-1){
                     state.dataArray = [ ...state.dataArray, action.payload ]; 
                 }
                 else{
