@@ -35,7 +35,7 @@ export const App = () => {
 
   const calculateTotalCalories = food => food ? food.reduce((calCount, foodItem) => (calCount+(foodItem.carbs*4+foodItem.protein*4+foodItem.fat*9)),0) : 0
 
-  const history = useSelector(dataArray);
+  const history = [...useSelector(dataArray)].sort((a,b)=>(a.date>b.date));
   const today = history.find(day=>{
     const date = new Date(day.date).toDateString();
     const today = new Date().toDateString();
@@ -87,30 +87,40 @@ export const App = () => {
     },
   ];
 
-  const xaxis = {
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dates = {
     label:"Date",
-    values:history.slice().reverse().map(d=>`${new Date(d.date).toLocaleDateString()}`)
+    values:history.slice().reverse().map(d=>`${days[new Date(d.date).getDay()]}`)
   }
-  const cdHistory = history.slice().reverse().map(d=>(bmr+d.excercise-calculateTotalCalories(d.food)));
-  const yaxis = {
-      label:"Deficit (KCal)",
-      values:[0,500,1000,1500,2000]
+  const cdHistory = [...history].reverse().map(d=>(bmr+d.excercise-calculateTotalCalories(d.food)));
+  const weightHistory = [...history].reverse().map(d=>d.weight);
+  const yaxisDeficit = {
+    label:"Deficit (KCal)",
+    values:[0,500,1000,1500,2000]
   }
-
-  console.log(cdHistory);
-
-  const graphs = [
-      {
-          label: "2020",
-          data: cdHistory,
-          pointColor: "#6B6B6B",
-          graphColor: "#0257CE",
-          dashing: 0,
-      }
-  ]
+  const deficitGraph = {
+    label: "2023",
+    data: cdHistory,
+    pointColor: "#6B6B6B",
+    graphColor: "#0257CE",
+    dashing: 0,
+    hoverLabel: val=>`${Math.round(val)} KCal`,
+  };
+  const yaxisWeight = {
+    label:"Weight (Kg)",
+    values:[75,80,85,90,95,100]
+  }
+  const weightGraph = {
+    label: "Weight Data",
+    data: weightHistory,
+    pointColor: "#183A1D",
+    graphColor: "#F0A04B",
+    dashing: 0,
+    hoverLabel: val=>`${Math.round(val*10)/10} Kg`,
+  };
 
   return (
-    <div className="App p-8 md:p-16 grid md:grid-cols-2 gap-8 justify-between">
+    <div className="App p-8 md:p-16 md:grid md:grid-cols-2 gap-8 justify-between">
       <div className="grid grid-cols-4 gap-3 items-center">
         <div>Weight: </div>
         <div className="col-span-3 border p-1 grid grid-cols-5">
@@ -175,9 +185,9 @@ export const App = () => {
           <button onClick={()=>{dispatch(sendData({data: {weight:parseFloat(weight), water:parseFloat(water), food, excercise:parseFloat(excercise), _id: today ? today._id : null}}))}} className="text-center px-4 py-1.5 font-bold border-gray-600 text-gray-600 border-2 rounded-md hover:bg-gray-600 hover:text-white">Update Data</button>
         </div>
       </div>
-      <div className="h-fit">
-        <div className="grid grid-cols-6 gap-4 text-center">
-          <div className="font-bold col-span-2">Date</div>
+      <div className="h-fit mt-8 md:mt-0 w-full">
+        <div className="grid grid-cols-5 gap-4 text-center w-full">
+          <div className="font-bold col-span-1">Date</div>
           <div className="font-bold">Weight</div>
           <div className="font-bold">Water</div>
           <div className="font-bold">Food</div>
@@ -185,8 +195,8 @@ export const App = () => {
         </div>
         {
           history.map((day)=>(
-            <div key={day.date} className="grid grid-cols-6 gap-4 text-center">
-              <div className="col-span-2">{new Date(day.date).toLocaleDateString()}</div>
+            <div key={day.date} className="grid grid-cols-5 gap-4 text-center">
+              <div className="col-span-1">{new Date(day.date).toLocaleDateString()}</div>
               <div className="">{day.weight ? `${day.weight} Kg`: '-'}</div>
               <div className="">{day.water ? `${day.water} L`: '-'}</div>
               <div className="">{day.food.length ? `${calculateTotalCalories(day.food)} KCal`: '-'}</div>
@@ -194,7 +204,7 @@ export const App = () => {
             </div>
           ))
         }
-        <div className="mt-8 flex gap-4">
+        <div className="mt-8 flex justify-between">
           <PieChartComponent data={FoodData} height="200px" width="250px"/>
           <div className="flex gap-1 mx-10">
             <div className="h-56">
@@ -218,7 +228,8 @@ export const App = () => {
             </div>
           </div>
         </div>
-        <LineGraphComponent width={400} height={200} xaxis={xaxis} yaxis={yaxis} graphs={graphs} target={{value:1000,type:"gt",label:"Target"}} sum={`Total Saved: ${Math.round(cdHistory.reduce((a,b)=>(a+b),0))}KCal / ${Math.round(cdHistory.reduce((a,b)=>(a+b),0)/770)/10}Kg`}/>
+        <LineGraphComponent graphID="deficit-graph" width={400} height={200} xaxis={dates} yaxis={yaxisDeficit} graphs={[deficitGraph]} target={{value:1000,type:"gt",label:"Target Deficit"}} sum={`Total Saved: ${Math.round(cdHistory.reduce((a,b)=>(a+b),0))}KCal / ${Math.round(cdHistory.reduce((a,b)=>(a+b),0)/770)/10}Kg`}/>
+        <LineGraphComponent graphID="weight-graph" width={400} height={200} xaxis={dates} yaxis={yaxisWeight} graphs={[weightGraph]} target={{value:85,type:"lt",label:"Target Weight"}} />
       </div>
     </div>
   );

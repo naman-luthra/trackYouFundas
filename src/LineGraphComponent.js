@@ -1,4 +1,4 @@
-export const LineGraphComponent = ({xaxis,yaxis,width,height,graphs,target,sum})=>{
+export const LineGraphComponent = ({graphID,xaxis,yaxis,width,height,graphs,target,sum})=>{
     const xgap = width/(xaxis.values.length);
     const ygap = height/(yaxis.values.length-1);
 
@@ -12,10 +12,7 @@ export const LineGraphComponent = ({xaxis,yaxis,width,height,graphs,target,sum})
 
     const graphArr = graphs.map(graph=>({
         dataPolygonPoints: graph.data.map((p,i)=>[60+xgap*(i),pointToCoordinate(p)]),
-        graphColor: graph.graphColor,
-        pointColor: graph.pointColor,
-        data: graph.data,
-        dashing: graph.dashing
+        ...graph
     }));
 
     return (
@@ -84,45 +81,6 @@ export const LineGraphComponent = ({xaxis,yaxis,width,height,graphs,target,sum})
                         </text>
                     ))}
                     {
-                        graphArr.map((graph,i) => (
-                            <>
-                                <polygon fill={graph.graphColor} points={`${graph.dataPolygonPoints[0][0]},${20+height} `+graph.dataPolygonPoints.map(p=>`${p[0]},${p[1]+20}`).join(' ')+` ${graph.dataPolygonPoints[graph.dataPolygonPoints.length-1][0]},${20+height}`}/>
-                                <text x={graph.dataPolygonPoints.reduce((prev,curr)=>prev+curr[0], 0)/graph.dataPolygonPoints.length} y={10+height} alignment-baseline="baseline" text-anchor="middle" fontSize="12" fontWeight={700} fill="white">{sum}</text>    
-                                {
-                                    graph.dataPolygonPoints.slice(0,graph.dataPolygonPoints.length-1).map((p,i)=>(
-                                        <line
-                                            key={i}
-                                            stroke={graph.graphColor}
-                                            strokeWidth={3}
-                                            strokeDasharray={graph.dashing}
-                                            x1={p[0]}
-                                            y1={p[1]+20}
-                                            x2={graph.dataPolygonPoints[i+1][0]}
-                                            y2={graph.dataPolygonPoints[i+1][1]+20}
-                                        />
-                                    ))
-                                }
-                                {
-                                    graph.dataPolygonPoints.map((p,i)=>(
-                                        <>
-                                            <circle
-                                                key={i}
-                                                cx={p[0]}
-                                                cy={p[1]+20}
-                                                r="4" 
-                                                stroke={graph.pointColor}
-                                                strokeWidth={2} fill="white"
-                                                className=""
-                                            >
-                                            </circle>
-                                        </>
-                                    ))
-                                }
-                            </>
-                        ))
-                    }
-
-                    {
                         target &&
                         <>
                             <text
@@ -143,6 +101,62 @@ export const LineGraphComponent = ({xaxis,yaxis,width,height,graphs,target,sum})
                                 className=" fill-slate-500 opacity-10"
                         />
                         </>
+                    }
+
+                    {
+                        graphArr.map((graph,i) => (
+                            <>
+                                <polygon fill={graph.graphColor} points={`${graph.dataPolygonPoints[0][0]},${20+height} `+graph.dataPolygonPoints.map(p=>`${p[0]},${p[1]+20}`).join(' ')+` ${graph.dataPolygonPoints[graph.dataPolygonPoints.length-1][0]},${20+height}`}/>
+                                <text x={graph.dataPolygonPoints.reduce((prev,curr)=>prev+curr[0], 0)/graph.dataPolygonPoints.length} y={10+height} alignmentBaseline="baseline" textAnchor="middle" fontSize="12" fontWeight={700} fill="white">{sum}</text>    
+                                {
+                                    graph.dataPolygonPoints.slice(0,graph.dataPolygonPoints.length-1).map((p,i)=>(
+                                        <line
+                                            key={i}
+                                            stroke={graph.graphColor}
+                                            strokeWidth={3}
+                                            strokeDasharray={graph.dashing}
+                                            x1={p[0]}
+                                            y1={p[1]+20}
+                                            x2={graph.dataPolygonPoints[i+1][0]}
+                                            y2={graph.dataPolygonPoints[i+1][1]+20}
+                                        />
+                                    ))
+                                }
+                                {
+                                    graph.dataPolygonPoints.map((p,i)=>(
+                                        <>
+                                            <circle
+                                                key={i}
+                                                id={`point-${i}`}
+                                                cx={p[0]}
+                                                cy={p[1]+20}
+                                                r="4" 
+                                                stroke={graph.pointColor}
+                                                strokeWidth={2} fill="white"
+                                                onMouseEnter={()=>{
+                                                    document.querySelectorAll(`.${graphID}-text-${i}`).forEach(e=>e.classList.toggle("opacity-0"));
+                                                }}
+                                                onMouseLeave={()=>{
+                                                    document.querySelectorAll(`.${graphID}-text-${i}`).forEach(e=>e.classList.toggle("opacity-0"));
+                                                }}
+                                                className="hover:stroke-black transition-all duration-300 cursor-pointer"
+                                            />
+                                            {
+                                                graph.hoverLabel!==undefined &&
+                                                <>
+                                                    <rect 
+                                                        x={p[0]+5} y={p[1]-5}  width={graph.hoverLabel(graph.data[i]).length*7+10} height="20" rx="5" className={`${graphID}-text-${i} opacity-0 fill-gray-600 cursor-default transition-all duration-300`}
+                                                    />
+                                                    <text x={p[0]+10} y={p[1]+10} fill="white" fontSize={12} fontWeight={700} className={`${graphID}-text-${i} opacity-0 cursor-default transition-all duration-300`}>
+                                                        {graph.hoverLabel(graph.data[i])}
+                                                    </text>
+                                                </>
+                                            }
+                                        </>
+                                    ))
+                                }
+                            </>
+                        ))
                     }
                 </svg>
             </div>
